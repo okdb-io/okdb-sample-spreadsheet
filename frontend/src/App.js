@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './App.css';
 
 import { Container, Paper, Grid } from '@material-ui/core';
@@ -81,6 +81,8 @@ const calculateTotals = (grid) => {
 }
 
 function App() {  
+  const [user, setUser] = useState(null);
+  const connectedRef = useRef(false);
   // online status and cursor/selections of other participants
   const [presences, setPresences] = useState({});
   // spreadsheet data
@@ -128,6 +130,7 @@ function App() {
     okdb.connect(TOKEN)
       .then(user => {
         console.log("[okdb] connected as ", user);
+        setUser(user);
         // 2. step - open document for collaborative editing        
         okdb.open(
             DATA_TYPE, // collection name
@@ -138,7 +141,8 @@ function App() {
           )
           .then(data => { 
             // get the data once the doc is opened
-            console.log("Loaded doc from server ", data);            
+            console.log("Loaded doc from server ", data);    
+            connectedRef.current = true;        
             calculateTotals(data);
             setGrid(data);
           })
@@ -161,10 +165,12 @@ function App() {
         top,
       };
       setLocalMouse(mousePos);
-      okdb.sendPresence({
-        ...mousePos,
-        ...localSelection
-      });
+      if(connectedRef.current) {
+        okdb.sendPresence({
+          ...mousePos,
+          ...localSelection
+        });
+      }
     };
     window.addEventListener('mousemove', handler);
     return () => {
@@ -174,11 +180,13 @@ function App() {
 
 
   const updateDoc = (newDoc) => {
-    okdb.put(DATA_TYPE, DOCUMENT_ID, newDoc)
-    .then(res => {
-      console.log("doc saved, ", res);      
-    })
-    .catch((err) =>  console.log("Error updating doc", err));
+    if(connectedRef.current) {
+      okdb.put(DATA_TYPE, DOCUMENT_ID, newDoc)
+      .then(res => {
+        console.log("doc saved, ", res);      
+      })
+      .catch((err) =>  console.log("Error updating doc", err));
+    }
   };
 
   const otherSelections = Object.keys(presences)
@@ -211,10 +219,12 @@ function App() {
                 selections={otherSelections}
                 onSelect={(selection) => {         
                   setLocalSelection(selection);
-                  okdb.sendPresence({
-                    ...selection,
-                    ...localMouse
-                  });
+                  if(connectedRef.current) {
+                    okdb.sendPresence({
+                      ...selection,
+                      ...localMouse
+                    });
+                  }
                 }}
               />
               </div>
@@ -228,7 +238,7 @@ function App() {
             <h4>Online:</h4>
             <div className="online-item" key="000">
               <svg width="10" focusable="false" viewBox="0 0 10 10" aria-hidden="true" title="fontSize small"><circle cx="5" cy="5" r="5"></circle></svg>
-              me
+              me ({user ? user.name : "connecting..."})
             </div>
             {Object.keys(presences).map((presenceId, index) => {              
               const presence = presences[presenceId];              
