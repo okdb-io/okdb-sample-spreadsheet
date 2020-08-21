@@ -12,7 +12,7 @@ import "okdb-spreadsheet/lib/styles.css";
 import MousePointer from './MousePointer';
 
 // location of your server
-const HOST = "localhost:7899";
+const HOST = "http://localhost:7899";
 // token for user authentication, handled by the auth handler on the server side
 const TOKEN = "12345";
 const okdb = new OkdbClient(HOST);
