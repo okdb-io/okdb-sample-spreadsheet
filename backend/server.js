@@ -9,7 +9,7 @@ const options = {
 const okdb = new OkdbServer(options);
 
 // sample authentication, e.g. should validate your own auth token
-const names = ["Lucas","Charlotte", "Oliver"];
+const names = ["Lucas","Charlotte", "Oliver", "Emma", "Daniel", "Julia", "Alexander", "Thomas", "Maria", "Richard"];
 let nameIdx = 0;
 okdb.handlers().auth((token) => {
     if(token === "12345") {
